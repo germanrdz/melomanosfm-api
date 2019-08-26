@@ -1,6 +1,8 @@
 /* eslint-disable camelcase */
 const express = require('express');
 const Spotify = require('spotify-web-api-node');
+const jwt = require('jsonwebtoken');
+
 const User = require('../models/User');
 
 // Constants
@@ -51,7 +53,7 @@ router.get('/auth/spotify/callback', (req, res) => {
 
         // fetch user from spotify
         const { body } = await spotifyApi.getMe();
-        const user = {
+        let user = {
           name: body.display_name,
           email: body.email,
           image: body.images[0].url,
@@ -59,15 +61,22 @@ router.get('/auth/spotify/callback', (req, res) => {
           spotifyUrl: body.external_urls.spotify,
         };
 
+        // save (or Not) in database
         try {
-          await User.findOrCreate(user);
+          user = await User.findOrCreate(user);
         } catch (err) {
           return res.redirect(`${process.env.REACT_APP_URL}/auth/error/user_create`);
         }
 
+        const token = jwt.sign(user.toJSON(), process.env.JWT_KEY);
+
         // pass tokens to the client via redirection (query string)
-        return res.redirect(`${process.env.REACT_APP_URL}/auth/success/${access_token}/${refresh_token}`);
-      }).catch(() => res.redirect(`${process.env.REACT_APP_URL}/auth/error/invalid_token`));
+        // return res.redirect(`${process.env.REACT_APP_URL}/auth/success/${access_token}/${refresh_token}`);
+        return res.redirect(`${process.env.REACT_APP_URL}/auth/success/${token}`);
+      }).catch(() => {
+        // console.log(error);
+        res.redirect(`${process.env.REACT_APP_URL}/auth/error/invalid_token`);
+      });
   }
 });
 
