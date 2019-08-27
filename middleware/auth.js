@@ -1,11 +1,13 @@
+/* eslint-disable no-underscore-dangle */
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization').replace('Bearer ', '');
+    const token = req.header('access-token');
     const data = jwt.verify(token, process.env.JWT_KEY);
-    const user = await User.findOne({ _id: data._id, 'tokens.token': token });
+
+    const user = await User.findOne({ _id: data._id });
 
     if (!user) {
       throw new Error();

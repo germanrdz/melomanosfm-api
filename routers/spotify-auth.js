@@ -51,7 +51,7 @@ router.get('/auth/spotify/callback', (req, res) => {
         spotifyApi.setAccessToken(access_token);
         spotifyApi.setRefreshToken(refresh_token);
 
-        // fetch user from spotify
+        // fetch user profile from spotify API
         const { body } = await spotifyApi.getMe();
         let user = {
           name: body.display_name,
@@ -59,6 +59,8 @@ router.get('/auth/spotify/callback', (req, res) => {
           image: body.images[0].url,
           spotifyId: body.id,
           spotifyUrl: body.external_urls.spotify,
+          spotifyAccesToken: access_token,
+          spotifyRefreshToken: refresh_token,
         };
 
         // save (or Not) in database
@@ -68,7 +70,8 @@ router.get('/auth/spotify/callback', (req, res) => {
           return res.redirect(`${process.env.REACT_APP_URL}/auth/error/user_create`);
         }
 
-        const token = jwt.sign(user.toJSON(), process.env.JWT_KEY);
+        const { spotifyAccesToken, spotifyRefreshToken, ...rest } = user.toObject();
+        const token = jwt.sign(rest, process.env.JWT_KEY);
 
         // pass tokens to the client via redirection (query string)
         // return res.redirect(`${process.env.REACT_APP_URL}/auth/success/${access_token}/${refresh_token}`);
