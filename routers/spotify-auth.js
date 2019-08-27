@@ -1,8 +1,9 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 const express = require('express');
-const Spotify = require('spotify-web-api-node');
 const jwt = require('jsonwebtoken');
 
+const spotifyApi = require('../services/spotify-api');
 const User = require('../models/User');
 
 // Constants
@@ -12,13 +13,6 @@ const SCOPES = ['user-read-private', 'user-read-email'];
 
 // Helpers
 const generateRandomString = N => (Math.random().toString(36) + Array(N).join('0')).slice(2, N + 2);
-
-// Initializing
-const spotifyApi = new Spotify({
-  clientId: process.env.SPOTIFY_CLIENT_ID,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process.env.SPOTIFY_CALLBACK_URL,
-});
 
 // Routes
 router.get('/auth/spotify/login', (req, res) => {
@@ -63,9 +57,15 @@ router.get('/auth/spotify/callback', (req, res) => {
           spotifyRefreshToken: refresh_token,
         };
 
-        // save (or Not) in database
+        // save (or update) in database
         try {
           user = await User.findOrCreate(user);
+
+          if (user) {
+            user.spotifyAccesToken = access_token;
+            user.spotifyRefreshToken = refresh_token;
+            await user.save();
+          }
         } catch (err) {
           return res.redirect(`${process.env.REACT_APP_URL}/auth/error/user_create`);
         }
