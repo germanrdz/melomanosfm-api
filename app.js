@@ -5,7 +5,6 @@ const cors = require('cors');
 require('./db/db');
 require('dotenv').config();
 
-// const usersRouter = require('./routers/users');
 const statusRouter = require('./routers/status');
 const spotifyAuthRouter = require('./routers/spotify-auth');
 const spotifyRouter = require('./routers/spotify');
