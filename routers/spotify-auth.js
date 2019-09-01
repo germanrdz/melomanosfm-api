@@ -9,7 +9,11 @@ const User = require('../models/User');
 // Constants
 const router = express.Router();
 const SPOTIFY_STATE_KEY = 'spotify_auth_state';
-const SCOPES = ['user-read-private', 'user-read-email'];
+const SCOPES = [
+  'user-read-private',
+  'user-read-email',
+  'user-top-read',
+];
 
 // Helpers
 const generateRandomString = N => (Math.random().toString(36) + Array(N).join('0')).slice(2, N + 2);
